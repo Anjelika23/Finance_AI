@@ -793,7 +793,7 @@ async function submitLoan(){
   document.getElementById('result-card').classList.remove('show');
   await new Promise(r=>setTimeout(r,1200));
   try{
-    const B=window.BACKEND_URL||'http://localhost:5000';
+    const B = window.BACKEND_URL || 'https://financeai-production-785d.up.railway.app';
     const res=await fetch(B+'/api/loan/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});
     showResult(await res.json(),f);
   }catch{showResult(localModel(f),f);}
