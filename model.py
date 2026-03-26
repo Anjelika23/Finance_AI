@@ -278,3 +278,179 @@ def _color(v):
     if v >= 70: return "#0a7c4e"
     if v >= 45: return "#92600a"
     return "#c0392b"
+
+
+"""
+Loan Amount Calculation - Implementation Guide
+===============================================
+
+This script demonstrates the corrected loan amount calculation logic
+that should be used in your ML model for loan approval prediction.
+"""
+
+import pandas as pd
+import numpy as np
+
+# Function to calculate loan amount
+def calculate_loan_amount(row):
+    """
+    Calculate loan amount based on:
+    - Monthly income (annual income / 12)
+    - Movable assets
+    - Immovable assets
+    - Credit score (CIBIL score)
+    
+    Credit Score Rules:
+    > 750: 5%
+    750-550: 4%
+    550-350: 2.5%
+    < 350: Disapproved (0)
+    """
+    credit_score = row['credit_score']
+    monthly_income = row['annual_income'] / 12
+    movable = row['movable_assets']
+    immovable = row['immovable_assets']
+    
+    # Total available amount
+    total_available = monthly_income + movable + immovable
+    
+    # Apply percentage based on credit score
+    if credit_score > 750:
+        percentage = 0.05  # 5%
+        status = "Approved - Excellent"
+    elif 550 <= credit_score <= 750:
+        percentage = 0.04  # 4%
+        status = "Approved - Good"
+    elif 350 <= credit_score < 550:
+        percentage = 0.025  # 2.5%
+        status = "Approved - Fair"
+    else:  # credit_score < 350
+        return 0, "Disapproved - Poor Credit"
+    
+    loan_amount = total_available * percentage
+    return loan_amount, status
+
+
+# Example 1: Excellent Credit Score (> 750)
+print("=" * 70)
+print("EXAMPLE 1: Excellent Credit Score (> 750)")
+print("=" * 70)
+data1 = {
+    'credit_score': 800,
+    'annual_income': 600000,
+    'movable_assets': 200000,
+    'immovable_assets': 800000
+}
+monthly_income1 = data1['annual_income'] / 12
+total_available1 = monthly_income1 + data1['movable_assets'] + data1['immovable_assets']
+loan_amount1, status1 = calculate_loan_amount(data1)
+
+print(f"Credit Score: {data1['credit_score']}")
+print(f"Annual Income: ₹{data1['annual_income']:,}")
+print(f"Monthly Income: ₹{monthly_income1:,.2f}")
+print(f"Movable Assets: ₹{data1['movable_assets']:,}")
+print(f"Immovable Assets: ₹{data1['immovable_assets']:,}")
+print(f"Total Available: ₹{total_available1:,.2f}")
+print(f"Applied Percentage: 5%")
+print(f"Status: {status1}")
+print(f"Calculated Loan Amount: ₹{loan_amount1:,.2f}")
+print()
+
+# Example 2: Good Credit Score (750-550)
+print("=" * 70)
+print("EXAMPLE 2: Good Credit Score (750-550)")
+print("=" * 70)
+data2 = {
+    'credit_score': 680,
+    'annual_income': 480000,
+    'movable_assets': 150000,
+    'immovable_assets': 600000
+}
+monthly_income2 = data2['annual_income'] / 12
+total_available2 = monthly_income2 + data2['movable_assets'] + data2['immovable_assets']
+loan_amount2, status2 = calculate_loan_amount(data2)
+
+print(f"Credit Score: {data2['credit_score']}")
+print(f"Annual Income: ₹{data2['annual_income']:,}")
+print(f"Monthly Income: ₹{monthly_income2:,.2f}")
+print(f"Movable Assets: ₹{data2['movable_assets']:,}")
+print(f"Immovable Assets: ₹{data2['immovable_assets']:,}")
+print(f"Total Available: ₹{total_available2:,.2f}")
+print(f"Applied Percentage: 4%")
+print(f"Status: {status2}")
+print(f"Calculated Loan Amount: ₹{loan_amount2:,.2f}")
+print()
+
+# Example 3: Fair Credit Score (550-350)
+print("=" * 70)
+print("EXAMPLE 3: Fair Credit Score (550-350)")
+print("=" * 70)
+data3 = {
+    'credit_score': 420,
+    'annual_income': 360000,
+    'movable_assets': 120000,
+    'immovable_assets': 500000
+}
+monthly_income3 = data3['annual_income'] / 12
+total_available3 = monthly_income3 + data3['movable_assets'] + data3['immovable_assets']
+loan_amount3, status3 = calculate_loan_amount(data3)
+
+print(f"Credit Score: {data3['credit_score']}")
+print(f"Annual Income: ₹{data3['annual_income']:,}")
+print(f"Monthly Income: ₹{monthly_income3:,.2f}")
+print(f"Movable Assets: ₹{data3['movable_assets']:,}")
+print(f"Immovable Assets: ₹{data3['immovable_assets']:,}")
+print(f"Total Available: ₹{total_available3:,.2f}")
+print(f"Applied Percentage: 2.5%")
+print(f"Status: {status3}")
+print(f"Calculated Loan Amount: ₹{loan_amount3:,.2f}")
+print()
+
+# Example 4: Poor Credit Score (< 350)
+print("=" * 70)
+print("EXAMPLE 4: Poor Credit Score (< 350)")
+print("=" * 70)
+data4 = {
+    'credit_score': 320,
+    'annual_income': 300000,
+    'movable_assets': 100000,
+    'immovable_assets': 400000
+}
+loan_amount4, status4 = calculate_loan_amount(data4)
+
+print(f"Credit Score: {data4['credit_score']}")
+print(f"Annual Income: ₹{data4['annual_income']:,}")
+print(f"Monthly Income: ₹{data4['annual_income']/12:,.2f}")
+print(f"Movable Assets: ₹{data4['movable_assets']:,}")
+print(f"Immovable Assets: ₹{data4['immovable_assets']:,}")
+print(f"Status: {status4}")
+print(f"Calculated Loan Amount: ₹{loan_amount4:,.2f}")
+print()
+
+# Summary Comparison
+print("=" * 70)
+print("SUMMARY COMPARISON")
+print("=" * 70)
+summary_data = {
+    'Applicant': ['Excellent (800)', 'Good (680)', 'Fair (420)', 'Poor (320)'],
+    'Credit Score': [800, 680, 420, 320],
+    'Total Available': [f"₹{total_available1:,.2f}", f"₹{total_available2:,.2f}", 
+                        f"₹{total_available3:,.2f}", "N/A"],
+    'Percentage': ['5%', '4%', '2.5%', 'Rejected'],
+    'Loan Amount': [f"₹{loan_amount1:,.2f}", f"₹{loan_amount2:,.2f}", 
+                    f"₹{loan_amount3:,.2f}", "₹0"]
+}
+
+summary_df = pd.DataFrame(summary_data)
+print(summary_df.to_string(index=False))
+print()
+
+print("=" * 70)
+print("KEY INSIGHTS")
+print("=" * 70)
+print(f"1. A borrower with excellent credit (800) can get ₹{loan_amount1:,.2f}")
+print(f"2. A borrower with good credit (680) can get ₹{loan_amount2:,.2f}")
+print(f"3. The difference is {((loan_amount1 - loan_amount2)/loan_amount2 * 100):.1f}% due to credit score")
+print(f"4. Borrowers with credit < 350 are automatically disapproved")
+print(f"5. Loan amounts scale with total financial capacity AND credit quality")
+print()
