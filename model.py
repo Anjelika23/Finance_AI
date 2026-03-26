@@ -456,3 +456,133 @@ def _color(v):
     if v >= 45:
         return "#92600a"  # Orange
     return "#c0392b"  # Red
+
+def _predict_rules(data: dict) -> dict:
+    """Rule-based loan prediction (fallback when ML models unavailable)."""
+    
+    income = _to_float(data.get("income", 0))
+    coincome = _to_float(data.get("coincome", 0))
+    loan_amt = _to_float(data.get("loanamt", 0))
+    term = _to_float(data.get("term", 360))
+    
+    # Improved credit score handling without forcing string conversion
+    credit_raw = data.get("credit_score") or data.get("credit", 550)
+    try:
+        # Accept numeric directly, only cast if needed
+        if isinstance(credit_raw, (int, float)):
+            credit_score = float(credit_raw)
+        else:
+            credit_score = float(credit_raw)
+        
+        # Explicit handling for no credit history
+        if credit_score == 0:
+            print("[INFO] Applicant has no credit history, treating as very low score (300).")
+            credit_score = 300
+        
+        # Validate range
+        elif credit_score < 300 or credit_score > 900:
+            print(f"[WARNING] Credit score {credit_score} out of range, using 550")
+            credit_score = 550
+    
+    except (ValueError, TypeError):
+        print(f"[WARNING] Invalid credit_score '{credit_raw}', using 550")
+        credit_score = 550
+    
+    monthly = income + coincome
+    emi = loan_amt / term if term > 0 else loan_amt
+    dti = emi / monthly if monthly > 0 else 999
+    
+    score = 0
+    factors = []
+    
+    # Credit score scoring
+    if credit_score >= 750:
+        cs_v = 95
+        score += 35
+    elif credit_score >= 700:
+        cs_v = 80
+        score += 28
+    elif credit_score >= 650:
+        cs_v = 62
+        score += 18
+    elif credit_score >= 600:
+        cs_v = 42
+        score += 10
+    else:
+        cs_v = 18
+        score += 0
+    
+    cs_c = "#0a7c4e" if credit_score >= 700 else ("#92600a" if credit_score >= 600 else "#c0392b")
+    factors.append({"n": f"Credit score ({int(credit_score)})", "v": cs_v, "c": cs_c})
+    
+    # DTI ratio scoring
+    if dti < 0.30:
+        ir_v = 92
+        score += 25
+    elif dti < 0.45:
+        ir_v = 72
+        score += 18
+    elif dti < 0.60:
+        ir_v = 50
+        score += 10
+    elif dti < 0.75:
+        ir_v = 30
+        score += 4
+    else:
+        ir_v = 10
+        score += 0
+    factors.append({"n": f"Debt-to-Income ({dti:.2f})", "v": ir_v, "c": _color(ir_v)})
+    
+    # Education scoring
+    education = str(data.get("education", "")).lower()
+    edu_v = 82 if education == "graduate" else 52
+    score += 10 if education == "graduate" else 5
+    factors.append({"n": "Education level", "v": edu_v, "c": _color(edu_v)})
+    
+    # Property area scoring
+    area = str(data.get("area", "urban")).lower()
+    area_scores = {"semiurban": 88, "urban": 76, "rural": 56}
+    area_v = area_scores.get(area, 60)
+    score += {"semiurban": 12, "urban": 9, "rural": 5}.get(area, 5)
+    factors.append({"n": "Property area", "v": area_v, "c": _color(area_v)})
+    
+    # Employment status scoring
+    emp = str(data.get("employment_status", "employed")).lower()
+    emp_scores = {"employed": 88, "self-employed": 60, "unemployed": 20}
+    emp_v = emp_scores.get(emp, 60)
+    score += {"employed": 5, "self-employed": 2, "unemployed": -5}.get(emp, 2)
+    factors.append({"n": "Employment status", "v": emp_v, "c": _color(emp_v)})
+    
+    # Approval decision
+    approved = score >= 55 and credit_score >= 600
+    
+    # Deterministic confidence
+    confidence = min(97, max(62, 60 + abs(score - 50)))
+    
+    max_loan = int(monthly * term * 0.45)
+    
+    loan_type = str(data.get("type", "home")).lower()
+    rate_map = {
+        "home": 8.5,
+        "personal": 11.0,
+        "education": 8.75,
+        "vehicle": 9.5,
+        "business": 10.5
+    }
+    interest_rate = rate_map.get(loan_type, 9.0) if approved else None
+    
+    return {
+        "approved": approved,
+        "score": min(100, max(0, score)),
+        "confidence": confidence,
+        "factors": factors,
+        "emi": int(emi),
+        "maxLoan": max_loan,
+        "rate": interest_rate,
+        "id": f"STB-{int(time.time()) % 1000000:06d}",
+        "monthly": int(monthly),
+        "loanamt": int(loan_amt),
+        "term": int(term),
+        "ml_powered": False,
+    }
+
