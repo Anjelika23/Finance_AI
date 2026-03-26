@@ -424,12 +424,11 @@ input[type=range]{background:transparent;border:none;padding:6px 0;accent-color:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ── Backend URL — auto-detects on Vercel, can be overridden ──────────────────
+// ── Backend URL — auto-detects on Railway or Vercel ──────────────────────
 const BACKEND_URL = (() => {
-  // If running on Vercel (same origin), use relative path — no separate backend needed
-  // If you have a separate backend, set window.__BACKEND_OVERRIDE before this script
-  if (window.__BACKEND_OVERRIDE) return window.__BACKEND_OVERRIDE.replace(/\/$/, '');
-  // On Vercel, API routes are on the same domain
-  return '';
+  if (window._BACKEND_OVERRIDE) return window._BACKEND_OVERRIDE.replace(/\/$/, '');
+  // Set this to your Railway backend URL
+  return "financeai-production-785d.up.railway.app";
 })();
 
 // ── Clock ─────────────────────────────────────────────────────────────────────
