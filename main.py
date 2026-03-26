@@ -95,15 +95,5 @@ def get_stocks():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
-```
 
-Also add `requests` to your `requirements.txt` if it's not already there:
-```
-requests
-```
-
----
-
-**Then redeploy on Railway.** Once it's live, test the endpoint directly in your browser:
-```
 https://your-app.railway.app/api/stocks?sector=tech
