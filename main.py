@@ -96,4 +96,4 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
 
-https://your-app.railway.app/api/stocks?sector=tech
+
